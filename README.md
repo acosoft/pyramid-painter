@@ -1,2 +1,2 @@
-# pyramid-painter
+# Pyramid Painter
 Workshop: Introduction to React
