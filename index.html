@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Welcome to JustPublish.org</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Gochi+Hand" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.19.0/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.1/react.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.4.1/react-dom.min.js"></script>
+    
+    <style>
+        h1 {
+            font-family: 'Gochi Hand', cursive;
+            margin-left: 15px;
+        }
+        
+        .cell {
+            width: 120px;
+            height: 75px;
+            margin: 1px;
+            display: inline-block;
+        }
+        
+        .bucket {
+            font-size: 24px;
+            margin: 16px 19px;
+        }
+        
+        .color {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: solid 2px transparent;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .pyramid {
+            margin-top: 75px;
+        }
+        
+        .palette {
+            margin-left: 30px;
+            margin-top: 15px;
+        }
+        
+        .selected {
+            border: solid 2px lightgray;
+            background-color: #f2f2f2;
+        }
+        
+        .brush .cell {
+            cursor: url(https://s29.postimg.org/6sc9hs5pz/paintbrush.png) 0 56, auto;
+        }
+        
+    </style>
+    
+  </head>
+  <body>
+  
+    <div id="root"></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    
+    <script type="text/babel">
+    
+        var activeColor = null;
+    
+        class Cell extends React.Component {
+            
+            constructor(props) {
+                super(props);
+                
+                this.state = {
+                    color: 'lightgray'
+                }
+                
+                this.handleClick = this.handleClick.bind(this);
+            }
+            
+            handleClick() {
+                if(activeColor != null) {
+                    this.setState({
+                        color: activeColor
+                    });    
+                }
+            }
+            
+            render() {
+                var styles = {
+                    backgroundColor: this.state.color    
+                };
+                
+                return <div style={ styles } onClick={ this.handleClick } className="cell"></div>
+            }
+        }
+        
+        class Row extends React.Component {
+            render() {
+                var cells = [];
+                var count = this.props.count;
+                
+                for(var i=0; i<count; i++) {
+                    var cell = <Cell key={i} />;
+                    cells.push(cell);
+                }
+                
+                return <div className="text-center">{ cells }</div>;
+            }
+        }
+        
+        class Pyramid extends React.Component {
+            render() {
+                var rows = [];
+                var { size } = this.props;
+                
+                for(var i=1; i<=size; i++) {
+                    var row = <Row key={i} count={i} />
+                    rows.push(row);
+                }
+                
+                return <div className="pyramid">{rows}</div>
+            }
+        }
+        
+        class Bucket extends React.Component {
+            render() {
+                var styles = { color: this.props.color };
+                return <span style={ styles } className="bucket glyphicon glyphicon-tint"></span>;
+            }
+        }
+        
+        class Color extends React.Component {
+            
+            constructor(props) {
+                super(props);
+                
+                this.handleSelected = this.handleSelected.bind(this);
+            }
+            
+            handleSelected() {
+                var { color, onSelected } = this.props;
+                
+                if(onSelected) {
+                    onSelected(color);
+                }
+            }
+            
+            render() {
+                var css = 'color';
+                var { color, selected } = this.props;
+                    
+                if(selected == true) {
+                    css += ' selected';
+                }
+                
+                return <span className={ css } onClick={ this.handleSelected }>
+                    <Bucket color={ color } />
+                </span>;
+            }
+            
+        }
+        
+        class PyramidPainter extends React.Component {
+            
+            constructor(props) {
+                super(props);
+                
+                this.handleSelected = this.handleSelected.bind(this);
+                
+                var selectedColor = this.props.colors[0];
+                
+                this.state = {
+                    color: selectedColor
+                }
+
+                this.emitColorChanged(selectedColor);
+            }
+            
+            handleSelected(selectedColor) {
+                this.setState({
+                    color: selectedColor
+                })
+                
+                this.emitColorChanged(selectedColor);
+            }
+            
+            emitColorChanged(selectedColor) {
+                
+                var { onColorChanged } = this.props;
+                
+                if(onColorChanged) {
+                    onColorChanged(selectedColor);
+                }
+            }
+            
+            render() {
+                var buckets = this.props.colors.map(function(color, index) {
+                    
+                    var selected = this.state.color == color;
+                    return <Color key={index} selected={selected} color={ color } onSelected={ this.handleSelected } />
+                    
+                }.bind(this));
+                
+                if(this.state.color != null) {
+                    var css = 'brush';
+                }
+                
+                return <div className={ css }>
+                    <div className="col-md-6"><h1>Pyramid Painter</h1></div>
+                    <div className="col-md-6 text-right"><div className="palette">{ buckets }</div></div>
+                    <div className="col-md-12"><Pyramid size="6" /></div>
+                </div>
+            }
+        }
+        
+        function changeActiveColor(color) {
+            activeColor = color;
+        }
+        
+        var buckets = [ 'cyan', 'yellow', 'magenta', '#606060' ];
+        var app = <PyramidPainter colors={ buckets } onColorChanged={changeActiveColor} />;
+        
+        ReactDOM.render(app, document.getElementById('root'))
+    </script>
+    
+    
+  </body>
+</html>
